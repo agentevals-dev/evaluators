@@ -1,0 +1,15 @@
+{
+  "metric_name": "test",
+  "threshold": 0.5,
+  "config": {},
+  "invocations": [
+    {
+      "invocation_id": "ci-test-001",
+      "user_content": "What is 2+2?",
+      "final_response": "The answer is 4.",
+      "tool_calls": [{"name": "calculator", "args": {"expr": "2+2"}}],
+      "tool_responses": [{"name": "calculator", "output": "4"}]
+    }
+  ],
+  "expected_invocations": null
+}
