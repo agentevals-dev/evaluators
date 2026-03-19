@@ -99,15 +99,27 @@ tags: [quality, tools]
 author: your-github-username
 ```
 
-### 4. Test locally
+### 4. Validate locally
 
-Add it to an eval config as a local `type: code` grader and run it:
+Run the validation script to catch issues before submitting:
+
+```bash
+pip install agentevals-grader-sdk pyyaml
+python scripts/validate_grader.py graders/my_grader
+```
+
+This checks:
+- **Manifest schema** -- required fields, entrypoint exists, name matches directory
+- **Syntax and imports** -- compiles cleanly, uses `@grader` decorator
+- **Smoke run** -- runs the grader with synthetic input and validates the `EvalResult` output (correct types for `score`, `details`, `status`, etc.)
+
+You can also test with a full eval run:
 
 ```yaml
 metrics:
   - name: my_grader
     type: code
-    path: ./my_grader/my_grader.py
+    path: ./graders/my_grader/my_grader.py
     threshold: 0.5
 ```
 
@@ -133,7 +145,7 @@ graders/
 
 3. Open a PR against `main`
 
-A CI workflow will validate your `grader.yaml` manifest. Once merged, the workflow regenerates `index.yaml` automatically, and your grader becomes available to everyone via `agentevals grader list`.
+CI will automatically validate your grader (manifest, syntax, and smoke run). Once merged, a separate workflow regenerates `index.yaml`, and your grader becomes available to everyone via `agentevals grader list`.
 
 ## Supported languages
 
