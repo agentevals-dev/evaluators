@@ -1,4 +1,4 @@
-"""Community grader: response_quality
+"""Community evaluator: response_quality
 
 Checks that every invocation has a non-empty response, meets a configurable
 minimum length, and doesn't just parrot back the user input.
@@ -48,3 +48,7 @@ def response_quality(input: EvalInput) -> EvalResult:
         per_invocation_scores=scores,
         details={"issues": issues} if issues else None,
     )
+
+
+if __name__ == "__main__":
+    response_quality.run()

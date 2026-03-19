@@ -1,10 +1,10 @@
-name: Build grader index
+name: Build evaluator index
 
 on:
   push:
     branches: [main]
     paths:
-      - "graders/**/grader.yaml"
+      - "evaluators/**/evaluator.yaml"
 
 permissions:
   contents: write
@@ -20,7 +20,7 @@ jobs:
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Build index.yaml from grader manifests
+      - name: Build index.yaml from evaluator manifests
         run: |
           set -euo pipefail
 
@@ -31,10 +31,10 @@ jobs:
           # Source: .github/workflows/build-index.yaml
           # Generated: ${TIMESTAMP}
 
-          graders:
+          evaluators:
           EOF
 
-          for manifest in graders/*/grader.yaml; do
+          for manifest in evaluators/*/evaluator.yaml; do
             dir=$(dirname "$manifest")
             name=$(yq '.name' "$manifest")
             description=$(yq '.description' "$manifest")

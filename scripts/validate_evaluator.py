@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validate a grader directory: manifest, syntax, and smoke run.
+"""Validate an evaluator directory: manifest, syntax, and smoke run.
 
 Usage:
-    python scripts/validate_grader.py graders/my_grader
-    python scripts/validate_grader.py graders/*          # validate all
+    python scripts/validate_evaluator.py evaluators/my_evaluator
+    python scripts/validate_evaluator.py evaluators/*          # validate all
 """
 
 from __future__ import annotations
@@ -36,11 +36,11 @@ def _ok(msg: str) -> None:
     print(f"  OK:   {msg}")
 
 
-def validate_manifest(grader_dir: Path) -> dict | None:
-    """Check grader.yaml exists and has required fields. Returns parsed manifest or None."""
-    manifest_path = grader_dir / "grader.yaml"
+def validate_manifest(evaluator_dir: Path) -> dict | None:
+    """Check evaluator.yaml exists and has required fields. Returns parsed manifest or None."""
+    manifest_path = evaluator_dir / "evaluator.yaml"
     if not manifest_path.exists():
-        _fail(f"Missing grader.yaml in {grader_dir}")
+        _fail(f"Missing evaluator.yaml in {evaluator_dir}")
         return None
 
     try:
@@ -50,21 +50,21 @@ def validate_manifest(grader_dir: Path) -> dict | None:
         return None
 
     if not isinstance(manifest, dict):
-        _fail(f"grader.yaml must be a YAML mapping, got {type(manifest).__name__}")
+        _fail(f"evaluator.yaml must be a YAML mapping, got {type(manifest).__name__}")
         return None
 
     missing = REQUIRED_MANIFEST_FIELDS - set(manifest.keys())
     if missing:
-        _fail(f"grader.yaml missing required fields: {sorted(missing)}")
+        _fail(f"evaluator.yaml missing required fields: {sorted(missing)}")
         return None
 
     entrypoint = manifest["entrypoint"]
-    entry_path = grader_dir / entrypoint
+    entry_path = evaluator_dir / entrypoint
     if not entry_path.exists():
         _fail(f"Entrypoint file not found: {entry_path}")
         return None
 
-    dir_name = grader_dir.name
+    dir_name = evaluator_dir.name
     if manifest["name"] != dir_name:
         _fail(
             f"Manifest name '{manifest['name']}' does not match "
@@ -76,11 +76,11 @@ def validate_manifest(grader_dir: Path) -> dict | None:
     return manifest
 
 
-def validate_syntax(grader_dir: Path, manifest: dict) -> bool:
-    """Check syntax and basic structure of the grader source file."""
+def validate_syntax(evaluator_dir: Path, manifest: dict) -> bool:
+    """Check syntax and basic structure of the evaluator source file."""
     language = manifest.get("language", "python")
     entrypoint = manifest["entrypoint"]
-    entry_path = grader_dir / entrypoint
+    entry_path = evaluator_dir / entrypoint
 
     if language == "python":
         result = subprocess.run(
@@ -97,13 +97,16 @@ def validate_syntax(grader_dir: Path, manifest: dict) -> bool:
         if "agentevals_grader_sdk" not in source:
             _fail(
                 f"{entry_path} does not import agentevals_grader_sdk. "
-                f"Graders must use the SDK or implement the stdin/stdout protocol."
+                f"Evaluators must use the SDK or implement the stdin/stdout protocol."
             )
             return False
         if "@grader" not in source:
             _fail(f"{entry_path} does not use the @grader decorator")
             return False
-        _ok("Imports and decorator present")
+        if 'if __name__ == "__main__"' not in source and "if __name__ == '__main__'" not in source:
+            _fail(f"{entry_path} missing 'if __name__ == \"__main__\"' block with .run() call")
+            return False
+        _ok("Imports, decorator, and explicit run() present")
 
     elif language in ("javascript", "typescript"):
         ext = Path(entrypoint).suffix
@@ -119,11 +122,11 @@ def validate_syntax(grader_dir: Path, manifest: dict) -> bool:
     return True
 
 
-def validate_smoke_run(grader_dir: Path, manifest: dict) -> bool:
-    """Run the grader with synthetic input and validate the output."""
+def validate_smoke_run(evaluator_dir: Path, manifest: dict) -> bool:
+    """Run the evaluator with synthetic input and validate the output."""
     language = manifest.get("language", "python")
     entrypoint = manifest["entrypoint"]
-    entry_path = grader_dir / entrypoint
+    entry_path = evaluator_dir / entrypoint
 
     if language == "python":
         cmd = [sys.executable, str(entry_path)]
@@ -146,7 +149,7 @@ def validate_smoke_run(grader_dir: Path, manifest: dict) -> bool:
     if result.returncode != 0:
         stderr_preview = result.stderr.strip()[:500]
         _fail(
-            f"Grader exited with code {result.returncode}\n"
+            f"Evaluator exited with code {result.returncode}\n"
             f"  stderr: {stderr_preview}"
         )
         return False
@@ -155,7 +158,7 @@ def validate_smoke_run(grader_dir: Path, manifest: dict) -> bool:
     if not stdout:
         stderr_preview = result.stderr.strip()[:500]
         _fail(
-            f"Grader produced no output on stdout"
+            f"Evaluator produced no output on stdout"
             + (f"\n  stderr: {stderr_preview}" if stderr_preview else "")
         )
         return False
@@ -163,7 +166,7 @@ def validate_smoke_run(grader_dir: Path, manifest: dict) -> bool:
     try:
         output = json.loads(stdout)
     except json.JSONDecodeError as exc:
-        _fail(f"Grader stdout is not valid JSON: {exc}\n  stdout: {stdout[:200]}")
+        _fail(f"Evaluator stdout is not valid JSON: {exc}\n  stdout: {stdout[:200]}")
         return False
 
     # Validate score
@@ -221,19 +224,19 @@ def validate_smoke_run(grader_dir: Path, manifest: dict) -> bool:
     return True
 
 
-def validate_grader(grader_dir: Path) -> bool:
-    """Run all validations on a single grader directory."""
-    print(f"\nValidating: {grader_dir}")
+def validate_evaluator(evaluator_dir: Path) -> bool:
+    """Run all validations on a single evaluator directory."""
+    print(f"\nValidating: {evaluator_dir}")
     print(f"{'─' * 50}")
 
-    manifest = validate_manifest(grader_dir)
+    manifest = validate_manifest(evaluator_dir)
     if manifest is None:
         return False
 
-    if not validate_syntax(grader_dir, manifest):
+    if not validate_syntax(evaluator_dir, manifest):
         return False
 
-    if not validate_smoke_run(grader_dir, manifest):
+    if not validate_smoke_run(evaluator_dir, manifest):
         return False
 
     return True
@@ -241,7 +244,7 @@ def validate_grader(grader_dir: Path) -> bool:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <grader_dir> [<grader_dir> ...]", file=sys.stderr)
+        print(f"Usage: {sys.argv[0]} <evaluator_dir> [<evaluator_dir> ...]", file=sys.stderr)
         sys.exit(2)
 
     dirs = [Path(arg) for arg in sys.argv[1:]]
@@ -251,10 +254,10 @@ def main() -> None:
         if not d.is_dir():
             print(f"\nSkipping {d} (not a directory)", file=sys.stderr)
             continue
-        if not (d / "grader.yaml").exists():
-            print(f"\nSkipping {d} (no grader.yaml)", file=sys.stderr)
+        if not (d / "evaluator.yaml").exists():
+            print(f"\nSkipping {d} (no evaluator.yaml)", file=sys.stderr)
             continue
-        results[str(d)] = validate_grader(d)
+        results[str(d)] = validate_evaluator(d)
 
     print(f"\n{'=' * 50}")
     print("Summary:")
@@ -266,15 +269,15 @@ def main() -> None:
             all_passed = False
 
     if not results:
-        print("  No graders found to validate.")
+        print("  No evaluators found to validate.")
         sys.exit(2)
 
     print()
     if all_passed:
-        print(f"All {len(results)} grader(s) passed.")
+        print(f"All {len(results)} evaluator(s) passed.")
     else:
         failed = sum(1 for v in results.values() if not v)
-        print(f"{failed} of {len(results)} grader(s) failed.")
+        print(f"{failed} of {len(results)} evaluator(s) failed.")
         sys.exit(1)
 
 

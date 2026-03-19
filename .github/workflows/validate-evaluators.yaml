@@ -1,0 +1,34 @@
+name: Validate evaluators
+
+on:
+  pull_request:
+    paths:
+      - "evaluators/**"
+      - "scripts/validate_evaluator.py"
+      - "scripts/test_input.json"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+          # TODO: switch to `pip install agentevals-grader-sdk` once published to PyPI
+          pip install "agentevals-grader-sdk @ git+https://github.com/agentevals-dev/agentevals.git#subdirectory=packages/grader-sdk-py"
+
+      - name: Discover and validate all evaluators
+        run: |
+          evaluator_dirs=$(find evaluators -mindepth 1 -maxdepth 1 -type d | sort)
+          if [ -z "$evaluator_dirs" ]; then
+            echo "No evaluator directories found."
+            exit 0
+          fi
+          python scripts/validate_evaluator.py $evaluator_dirs

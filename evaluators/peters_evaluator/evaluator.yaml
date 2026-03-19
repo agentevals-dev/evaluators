@@ -1,0 +1,6 @@
+name: peters_evaluator
+description: 'sample evaluator that returns a 0.123 score'
+language: python
+entrypoint: peters_evaluator.py
+tags: ["test", "example"]
+author: 'peterj'

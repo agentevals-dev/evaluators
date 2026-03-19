@@ -1,4 +1,4 @@
-"""Community grader: tool_coverage
+"""Community evaluator: tool_coverage
 
 Verifies that each invocation made at least a minimum number of tool calls.
 Useful for ensuring agents actually use their tools rather than hallucinating
@@ -34,3 +34,7 @@ def tool_coverage(input: EvalInput) -> EvalResult:
         per_invocation_scores=scores,
         details={"missing_tools": details} if details else None,
     )
+
+
+if __name__ == "__main__":
+    tool_coverage.run()

@@ -2,22 +2,22 @@
 # Source: .github/workflows/build-index.yaml
 # Generated: 2026-03-19T00:55:19Z
 
-graders:
-  - name: peters_grader
-    description: "sample grader that returns a 0.123 score"
+evaluators:
+  - name: peters_evaluator
+    description: "sample evaluator that returns a 0.123 score"
     language: python
-    path: graders/peters_grader/peters_grader.py
+    path: evaluators/peters_evaluator/peters_evaluator.py
     tags: ["test","example"]
     author: peterj
   - name: response_quality
     description: "Checks that responses are non-empty, meet a minimum length, and don't just echo back the user input"
     language: python
-    path: graders/response_quality/response_quality.py
+    path: evaluators/response_quality/response_quality.py
     tags: ["quality","response","length"]
     author: agentevals-dev
   - name: tool_coverage
     description: "Verifies that each invocation made at least a minimum number of tool calls"
     language: python
-    path: graders/tool_coverage/tool_coverage.py
+    path: evaluators/tool_coverage/tool_coverage.py
     tags: ["tools","coverage","validation"]
     author: agentevals-dev
