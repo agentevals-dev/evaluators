@@ -1,0 +1,6 @@
+name: tool_coverage
+description: Verifies that each invocation made at least a minimum number of tool calls
+language: python
+entrypoint: tool_coverage.py
+tags: [tools, coverage, validation]
+author: agentevals-dev

@@ -1,0 +1,6 @@
+name: response_quality
+description: Checks that responses are non-empty, meet a minimum length, and don't just echo back the user input
+language: python
+entrypoint: response_quality.py
+tags: [quality, response, length]
+author: agentevals-dev
