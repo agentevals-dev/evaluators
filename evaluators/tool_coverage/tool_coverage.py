@@ -8,10 +8,10 @@ Config options:
   min_tool_calls (int): Minimum tool calls per invocation (default: 1)
 """
 
-from agentevals_grader_sdk import grader, EvalInput, EvalResult
+from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
 
 
-@grader
+@evaluator
 def tool_coverage(input: EvalInput) -> EvalResult:
     min_calls = input.config.get("min_tool_calls", 1)
     scores: list[float] = []

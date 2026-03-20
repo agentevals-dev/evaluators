@@ -1,16 +1,23 @@
-"""Community evaluator: response_quality
+"""Example custom evaluator: checks that every invocation has a non-empty response
+and that responses don't just parrot back the user input.
 
-Checks that every invocation has a non-empty response, meets a configurable
-minimum length, and doesn't just parrot back the user input.
+Install the SDK standalone:  pip install agentevals-evaluator-sdk
 
-Config options:
-  min_response_length (int): Minimum character length for responses (default: 10)
+Usage in eval_config.yaml:
+
+    evaluators:
+      - name: response_quality
+        type: code
+        path: ./examples/custom_evaluators/response_quality.py
+        threshold: 0.7
+        config:
+          min_response_length: 20
 """
 
-from agentevals_grader_sdk import grader, EvalInput, EvalResult
+from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
 
 
-@grader
+@evaluator
 def response_quality(input: EvalInput) -> EvalResult:
     min_len = input.config.get("min_response_length", 10)
     scores: list[float] = []
@@ -37,7 +44,7 @@ def response_quality(input: EvalInput) -> EvalResult:
             and inv.final_response.strip().lower() == inv.user_content.strip().lower()
         ):
             score -= 0.5
-            issues.append(f"{inv.invocation_id}: response echoes user input")
+            issues.append(f"{inv.invocation_id}: response is just the user input echoed back")
 
         scores.append(max(0.0, score))
 

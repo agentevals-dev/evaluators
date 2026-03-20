@@ -1,0 +1,6 @@
+name: random_evaluator
+description: 'Example evaluator that returns a randopm score between 0 and 1'
+language: python
+entrypoint: random_evaluator.py
+tags: ["test"]
+author: 'peterj'
