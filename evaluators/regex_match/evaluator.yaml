@@ -1,0 +1,6 @@
+name: regex_match
+description: Scores whether each final response matches a configured regular expression
+language: python
+entrypoint: regex_match.py
+tags: [regex]
+author: agentevals-dev

@@ -94,14 +94,14 @@ def validate_syntax(evaluator_dir: Path, manifest: dict) -> bool:
         _ok(f"Python syntax valid ({entry_path})")
 
         source = entry_path.read_text()
-        if "agentevals_grader_sdk" not in source:
+        if "agentevals_evaluator_sdk" not in source:
             _fail(
-                f"{entry_path} does not import agentevals_grader_sdk. "
+                f"{entry_path} does not import agentevals_evaluator_sdk. "
                 f"Evaluators must use the SDK or implement the stdin/stdout protocol."
             )
             return False
-        if "@grader" not in source:
-            _fail(f"{entry_path} does not use the @grader decorator")
+        if "@evaluator" not in source:
+            _fail(f"{entry_path} does not use the @evaluator decorator")
             return False
         if 'if __name__ == "__main__"' not in source and "if __name__ == '__main__'" not in source:
             _fail(f"{entry_path} missing 'if __name__ == \"__main__\"' block with .run() call")
@@ -211,7 +211,7 @@ def validate_smoke_run(evaluator_dir: Path, manifest: dict) -> bool:
 
     # Full Pydantic validation via the SDK if available
     try:
-        from agentevals_grader_sdk import EvalResult
+        from agentevals_evaluator_sdk import EvalResult
         EvalResult.model_validate(output)
         _ok("Output validates against EvalResult schema (Pydantic)")
     except ImportError:

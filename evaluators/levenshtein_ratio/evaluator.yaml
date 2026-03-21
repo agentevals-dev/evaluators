@@ -1,0 +1,6 @@
+name: levenshtein_ratio
+description: Scores similarity of each response to a reference string using normalized Levenshtein distance
+language: python
+entrypoint: levenshtein_ratio.py
+tags: [string, levenshtein]
+author: agentevals-dev

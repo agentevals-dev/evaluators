@@ -1,0 +1,6 @@
+name: tool_sequence_match
+description: Scores whether tool calls match an expected list of tool names (order-sensitive or multiset)
+language: python
+entrypoint: tool_sequence_match.py
+tags: [tools, trajectory]
+author: agentevals-dev
