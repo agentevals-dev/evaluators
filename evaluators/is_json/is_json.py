@@ -3,12 +3,11 @@
 Tries to parse final_response as JSON. Optionally extracts fenced ```json ... ``` blocks.
 
 Config:
-  require_json (bool, default False): If False, evaluator is a no-op (1.0).
   extract_markdown_fence (bool, default True): Strip ```json fences if present.
 
 Usage:
     config:
-      require_json: true
+      extract_markdown_fence: true
 """
 
 from __future__ import annotations
@@ -32,13 +31,6 @@ def _parse_json_payload(text: str, extract_fence: bool) -> object:
 
 @evaluator
 def is_json(input: EvalInput) -> EvalResult:
-    if not input.config.get("require_json"):
-        return EvalResult(
-            score=1.0,
-            per_invocation_scores=[1.0] * len(input.invocations),
-            details={"note": "require_json not set; skipping check"},
-        )
-
     extract_fence = bool(input.config.get("extract_markdown_fence", True))
 
     scores: list[float] = []

@@ -3,7 +3,7 @@
 Score for an invocation is 1.0 - (edit_distance / max(len(a), len(b), 1)), clamped to [0, 1].
 
 Config:
-  expected (str): If omitted, no-op (1.0).
+  expected (str): Required. If omitted, returns NOT_EVALUATED.
   case_insensitive (bool, default False): Compare lowercased strings.
 
 Usage:
@@ -13,7 +13,7 @@ Usage:
 
 from __future__ import annotations
 
-from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 
 def _levenshtein(a: str, b: str) -> int:
@@ -38,10 +38,12 @@ def _levenshtein(a: str, b: str) -> int:
 def levenshtein_ratio(input: EvalInput) -> EvalResult:
     expected = input.config.get("expected")
     if expected is None:
+        n = len(input.invocations)
         return EvalResult(
-            score=1.0,
-            per_invocation_scores=[1.0] * len(input.invocations),
-            details={"note": "no expected string configured; skipping check"},
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "missing config: expected"},
         )
 
     case_insensitive = bool(input.config.get("case_insensitive", False))

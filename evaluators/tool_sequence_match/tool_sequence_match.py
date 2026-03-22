@@ -3,7 +3,7 @@
 Compares the ordered list of tool names in each invocation to config.
 
 Config:
-  expected_tool_names (list[str]): If omitted or empty, no-op (1.0).
+  expected_tool_names (list[str]): Required non-empty. Otherwise returns NOT_EVALUATED.
   require_order (bool, default True): If False, compares multisets (same counts per name).
 
 Usage:
@@ -16,17 +16,26 @@ from __future__ import annotations
 
 from collections import Counter
 
-from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 
 @evaluator
 def tool_sequence_match(input: EvalInput) -> EvalResult:
     expected = input.config.get("expected_tool_names")
+    n = len(input.invocations)
+    if expected is None or not isinstance(expected, list):
+        return EvalResult(
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "missing or invalid config: expected_tool_names (need a list of names)"},
+        )
     if not expected:
         return EvalResult(
-            score=1.0,
-            per_invocation_scores=[1.0] * len(input.invocations),
-            details={"note": "no expected_tool_names configured; skipping check"},
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "missing or empty config: expected_tool_names"},
         )
 
     want = [str(x) for x in expected]

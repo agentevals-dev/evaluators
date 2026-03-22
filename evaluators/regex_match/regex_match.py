@@ -1,7 +1,7 @@
 """Regex on final response evaluator.
 
 Config:
-  pattern (str): If omitted, no-op (1.0).
+  pattern (str): Required. If omitted or invalid, returns NOT_EVALUATED.
   flags (str, optional): "IGNORECASE" | "MULTILINE" | "DOTALL" — combined with |.
 
 Usage:
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 _FLAG_MAP = {
     "IGNORECASE": re.IGNORECASE,
@@ -26,11 +26,13 @@ _FLAG_MAP = {
 @evaluator
 def regex_match(input: EvalInput) -> EvalResult:
     pattern = input.config.get("pattern")
+    n = len(input.invocations)
     if not pattern:
         return EvalResult(
-            score=1.0,
-            per_invocation_scores=[1.0] * len(input.invocations),
-            details={"note": "no pattern configured; skipping check"},
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "missing config: pattern"},
         )
 
     flag_names = input.config.get("flags")
@@ -51,8 +53,9 @@ def regex_match(input: EvalInput) -> EvalResult:
     except re.error as exc:
         return EvalResult(
             score=0.0,
-            per_invocation_scores=[0.0] * len(input.invocations),
-            details={"error": f"invalid regex: {exc}"},
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "invalid regex pattern", "error": str(exc)},
         )
 
     scores: list[float] = []

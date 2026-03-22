@@ -158,7 +158,7 @@ def validate_smoke_run(evaluator_dir: Path, manifest: dict) -> bool:
     if not stdout:
         stderr_preview = result.stderr.strip()[:500]
         _fail(
-            f"Evaluator produced no output on stdout"
+            "Evaluator produced no output on stdout"
             + (f"\n  stderr: {stderr_preview}" if stderr_preview else "")
         )
         return False
@@ -208,6 +208,13 @@ def validate_smoke_run(evaluator_dir: Path, manifest: dict) -> bool:
                 f"got {type(per_inv).__name__}"
             )
             return False
+        for i, x in enumerate(per_inv):
+            if x is not None and not isinstance(x, (int, float)):
+                _fail(
+                    f"'per_invocation_scores[{i}]' must be a number or null, "
+                    f"got {type(x).__name__}"
+                )
+                return False
 
     # Full Pydantic validation via the SDK if available
     try:

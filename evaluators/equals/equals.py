@@ -1,7 +1,7 @@
 """Exact string match evaluator.
 
 Config:
-  expected (str): If omitted, no-op (1.0).
+  expected (str): Required. If omitted, returns NOT_EVALUATED.
   case_insensitive (bool, default True): Compare normalized strings.
   strip (bool, default True): Strip whitespace before compare.
 
@@ -12,20 +12,22 @@ Usage:
 
 from __future__ import annotations
 
-from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 
 @evaluator
 def equals(input: EvalInput) -> EvalResult:
     expected = input.config.get("expected")
     if expected is None:
+        n = len(input.invocations)
         return EvalResult(
-            score=1.0,
-            per_invocation_scores=[1.0] * len(input.invocations),
-            details={"note": "no expected string configured; skipping check"},
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            per_invocation_scores=[None] * n,
+            details={"reason": "missing config: expected"},
         )
 
-    case_insensitive = bool(input.config.get("case_insensitive", True))
+    case_insensitive = bool(input.config.get("case_insensitive", False))
     strip = bool(input.config.get("strip", True))
 
     def norm(s: str) -> str:
