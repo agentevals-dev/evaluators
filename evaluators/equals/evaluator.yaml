@@ -1,0 +1,6 @@
+name: equals
+description: Scores whether each final response exactly matches a configured expected string
+language: python
+entrypoint: equals.py
+tags: [string, equals]
+author: agentevals-dev

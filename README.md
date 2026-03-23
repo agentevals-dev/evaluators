@@ -107,13 +107,13 @@ author: your-github-username
 Run the validation script to catch issues before submitting:
 
 ```bash
-pip install agentevals-grader-sdk pyyaml
+pip install pyyaml agentevals-evaluator-sdk
 python scripts/validate_evaluator.py evaluators/my_evaluator
 ```
 
 This checks:
 - **Manifest schema** -- required fields, entrypoint exists, name matches directory
-- **Syntax and imports** -- compiles cleanly, uses `@grader` decorator
+- **Syntax and imports** -- compiles cleanly, uses `@evaluator` decorator
 - **Smoke run** -- runs the evaluator with synthetic input and validates the `EvalResult` output (correct types for `score`, `details`, `status`, etc.)
 
 You can also test with a full eval run:

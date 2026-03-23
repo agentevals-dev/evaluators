@@ -18,7 +18,7 @@ def tool_coverage(input: EvalInput) -> EvalResult:
     details: list[str] = []
 
     for inv in input.invocations:
-        actual = len(inv.tool_calls)
+        actual = len(inv.intermediate_steps.tool_calls)
         if actual >= min_calls:
             scores.append(1.0)
         else:

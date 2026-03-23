@@ -1,0 +1,6 @@
+name: contains
+description: Scores whether each final response contains a configured substring (case-sensitive or case-insensitive)
+language: python
+entrypoint: contains.py
+tags: [string, contains]
+author: agentevals-dev

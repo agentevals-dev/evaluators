@@ -1,0 +1,6 @@
+name: is_json
+description: Scores whether each final response parses as JSON (optional markdown code fence extraction)
+language: python
+entrypoint: is_json.py
+tags: [json, structured]
+author: agentevals-dev
