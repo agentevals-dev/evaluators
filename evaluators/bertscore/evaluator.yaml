@@ -1,0 +1,6 @@
+name: bertscore
+description: Semantic similarity scoring using BERTScore (precision, recall, F1) between response and reference text
+language: python
+entrypoint: bertscore.py
+tags: [semantic, similarity, bert, nlp]
+author: agentevals-dev

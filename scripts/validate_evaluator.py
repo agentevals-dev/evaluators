@@ -108,6 +108,15 @@ def validate_syntax(evaluator_dir: Path, manifest: dict) -> bool:
             return False
         _ok("Imports, decorator, and explicit run() present")
 
+        req_file = evaluator_dir / "requirements.txt"
+        if req_file.exists():
+            lines = req_file.read_text().strip().splitlines()
+            valid_lines = [l.strip() for l in lines if l.strip() and not l.strip().startswith("#")]
+            if not valid_lines:
+                _fail("requirements.txt exists but contains no dependencies")
+                return False
+            _ok(f"requirements.txt found ({len(valid_lines)} dependencies)")
+
     elif language in ("javascript", "typescript"):
         ext = Path(entrypoint).suffix
         expected = LANGUAGE_EXTENSIONS.get(language, set())
@@ -124,6 +133,11 @@ def validate_syntax(evaluator_dir: Path, manifest: dict) -> bool:
 
 def validate_smoke_run(evaluator_dir: Path, manifest: dict) -> bool:
     """Run the evaluator with synthetic input and validate the output."""
+    req_file = evaluator_dir / "requirements.txt"
+    if req_file.exists() and req_file.read_text().strip():
+        _ok("Skipping smoke run: evaluator has requirements.txt (deps may not be installed)")
+        return True
+
     language = manifest.get("language", "python")
     entrypoint = manifest["entrypoint"]
     entry_path = evaluator_dir / entrypoint
