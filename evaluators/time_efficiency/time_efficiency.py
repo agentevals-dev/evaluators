@@ -1,17 +1,15 @@
 """Community evaluator: time_efficiency
 
-Scores how quickly the agent resolved relative to a time budget.
-Uses performance_metrics.duration_s from trace data when available.
+Scores resolution time relative to a budget. Extracts duration_s from
+performance_metrics when available, otherwise returns NOT_EVALUATED.
 
-Config options:
-  max_duration_s (float): Time budget in seconds (default: 120)
+Config: max_duration_s (float, default 120)
 """
 
-from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 
 def _extract_duration(inv) -> float | None:
-    """Extract duration_s from an invocation's performance_metrics."""
     perf = getattr(inv, "performance_metrics", None)
     if perf is None and hasattr(inv, "__getitem__"):
         try:
@@ -20,10 +18,9 @@ def _extract_duration(inv) -> float | None:
             perf = None
 
     if isinstance(perf, dict):
-        duration = perf.get("duration_s") or perf.get("duration")
-        if duration is not None:
-            return float(duration)
-
+        d = perf.get("duration_s") or perf.get("duration")
+        if d is not None:
+            return float(d)
     return None
 
 
@@ -37,31 +34,25 @@ def time_efficiency(input: EvalInput) -> EvalResult:
 
     for inv in input.invocations:
         duration = _extract_duration(inv)
-
         if duration is None:
-            # No timing data — assign neutral score
-            scores.append(0.5)
-            details_items.append(f"{inv.invocation_id}: no duration data available")
+            scores.append(0.0)
+            details_items.append(f"{inv.invocation_id}: no duration data")
             continue
 
         has_data = True
         score = max(0.0, min(1.0, 1.0 - (duration / max_duration)))
         scores.append(score)
-        details_items.append(
-            f"{inv.invocation_id}: {duration:.1f}s / {max_duration:.1f}s budget (score: {score:.2f})"
+        details_items.append(f"{inv.invocation_id}: {duration:.1f}s / {max_duration:.1f}s")
+
+    if not has_data:
+        return EvalResult(
+            score=0.0,
+            status=EvalStatus.NOT_EVALUATED,
+            details={"reason": "no duration data in any invocation"},
         )
 
     overall = sum(scores) / len(scores) if scores else 0.0
-
-    return EvalResult(
-        score=overall,
-        per_invocation_scores=scores,
-        details={
-            "time_details": details_items,
-            "has_trace_data": has_data,
-            "max_duration_s": max_duration,
-        },
-    )
+    return EvalResult(score=overall, per_invocation_scores=scores, details={"time_details": details_items})
 
 
 if __name__ == "__main__":
