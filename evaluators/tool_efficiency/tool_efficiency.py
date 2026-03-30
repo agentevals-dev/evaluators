@@ -3,8 +3,8 @@
 Scores tool usage effectiveness. Penalizes duplicate calls (same tool + args),
 error responses, and budget overruns.
 
-Config: max_tool_calls (int, default 15), penalize_duplicates (bool, default true),
-        penalize_errors (bool, default true)
+Config: max_tool_calls (int, default 15), min_tool_calls (int, default 0),
+        penalize_duplicates (bool, default true), penalize_errors (bool, default true)
 """
 
 import json
@@ -30,6 +30,7 @@ def _is_error_response(response) -> bool:
 @evaluator
 def tool_efficiency(input: EvalInput) -> EvalResult:
     max_tool_calls = input.config.get("max_tool_calls", 15)
+    min_tool_calls = input.config.get("min_tool_calls", 0)
     penalize_duplicates = input.config.get("penalize_duplicates", True)
     penalize_errors = input.config.get("penalize_errors", True)
 
@@ -42,16 +43,22 @@ def tool_efficiency(input: EvalInput) -> EvalResult:
         total = len(tool_calls)
 
         if total == 0:
-            scores.append(1.0)
-            details_items.append(f"{inv.invocation_id}: no tool calls")
+            if min_tool_calls > 0:
+                scores.append(0.0)
+                details_items.append(f"{inv.invocation_id}: no tool calls (min required: {min_tool_calls})")
+            else:
+                scores.append(1.0)
+                details_items.append(f"{inv.invocation_id}: no tool calls (tools optional)")
             continue
 
-        seen: dict[str, int] = {}
-        for call in tool_calls:
-            sig = _call_signature(call)
-            seen[sig] = seen.get(sig, 0) + 1
+        dupes = 0
+        if penalize_duplicates:
+            seen: dict[str, int] = {}
+            for call in tool_calls:
+                sig = _call_signature(call)
+                seen[sig] = seen.get(sig, 0) + 1
+            dupes = sum(c - 1 for c in seen.values() if c > 1)
 
-        dupes = sum(c - 1 for c in seen.values() if c > 1) if penalize_duplicates else 0
         errors = sum(1 for r in tool_responses if _is_error_response(r)) if penalize_errors else 0
         useful = max(0, total - dupes - errors)
 
