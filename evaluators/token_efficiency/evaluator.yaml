@@ -1,0 +1,6 @@
+name: token_efficiency
+description: Scores how efficiently the agent used tokens relative to a budget
+language: python
+entrypoint: token_efficiency.py
+tags: [performance, tokens, efficiency, budget]
+author: henrikrexed

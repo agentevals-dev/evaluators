@@ -1,0 +1,6 @@
+name: time_efficiency
+description: Scores how quickly the agent resolved relative to a time budget
+language: python
+entrypoint: time_efficiency.py
+tags: [performance, time, latency, efficiency, budget]
+author: henrikrexed
