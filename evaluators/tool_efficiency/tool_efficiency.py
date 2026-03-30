@@ -8,7 +8,7 @@ Config: max_tool_calls (int, default 15), penalize_duplicates (bool, default tru
 """
 
 import json
-from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
+from agentevals_evaluator_sdk import EvalInput, EvalResult, evaluator
 
 
 def _call_signature(call) -> str:
@@ -22,11 +22,9 @@ def _call_signature(call) -> str:
 
 
 def _is_error_response(response) -> bool:
-    output = response.get("output", "") if isinstance(response, dict) else getattr(response, "output", "")
-    if any(m in str(output).lower() for m in ["error", "failed", "exception", "traceback"]):
-        return True
+    """Check if a tool response indicates an error via its status field."""
     status = response.get("status", "") if isinstance(response, dict) else getattr(response, "status", "")
-    return str(status).lower() in ("error", "failed")
+    return str(status).lower() in ("error", "failed", "failure")
 
 
 @evaluator
