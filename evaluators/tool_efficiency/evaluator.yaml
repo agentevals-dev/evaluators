@@ -1,0 +1,6 @@
+name: tool_efficiency
+description: Scores whether the agent used tools effectively — penalizes waste, duplicates, and errors
+language: python
+entrypoint: tool_efficiency.py
+tags: [performance, tools, efficiency, budget]
+author: henrikrexed
