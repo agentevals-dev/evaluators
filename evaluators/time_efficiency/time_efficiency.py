@@ -10,17 +10,13 @@ from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluato
 
 
 def _extract_duration(inv) -> float | None:
-    perf = getattr(inv, "performance_metrics", None)
-    if perf is None and hasattr(inv, "__getitem__"):
-        try:
-            perf = inv["performance_metrics"]
-        except (KeyError, TypeError):
-            perf = None
+    perf = inv.performance_metrics
+    if not isinstance(perf, dict):
+        return None
 
-    if isinstance(perf, dict):
-        d = perf.get("duration_s") or perf.get("duration")
-        if d is not None:
-            return float(d)
+    d = perf.get("duration_s") or perf.get("duration")
+    if d is not None:
+        return float(d)
     return None
 
 

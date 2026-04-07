@@ -3,35 +3,29 @@
 Scores token usage relative to a budget. Extracts input/output tokens from
 performance_metrics when available, otherwise returns NOT_EVALUATED.
 
-Config: max_tokens (int, default 200000), weight_input (float, default 0.7),
-        weight_output (float, default 0.3)
+Config: max_input_tokens (int, default 150000), max_output_tokens (int, default 50000)
 """
 
 from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
 
 
 def _extract_tokens(inv) -> dict | None:
-    perf = getattr(inv, "performance_metrics", None)
-    if perf is None and hasattr(inv, "__getitem__"):
-        try:
-            perf = inv["performance_metrics"]
-        except (KeyError, TypeError):
-            perf = None
+    perf = inv.performance_metrics
+    if not isinstance(perf, dict):
+        return None
 
-    if isinstance(perf, dict):
-        input_t = perf.get("input_tokens") or perf.get("prompt_tokens")
-        output_t = perf.get("output_tokens") or perf.get("completion_tokens")
-        if input_t is not None or output_t is not None:
-            return {"input_tokens": int(input_t or 0), "output_tokens": int(output_t or 0)}
+    input_t = perf.get("input_tokens") or perf.get("prompt_tokens")
+    output_t = perf.get("output_tokens") or perf.get("completion_tokens")
+    if input_t is not None or output_t is not None:
+        return {"input_tokens": int(input_t or 0), "output_tokens": int(output_t or 0)}
 
     return None
 
 
 @evaluator
 def token_efficiency(input: EvalInput) -> EvalResult:
-    max_tokens = input.config.get("max_tokens", 200000)
-    weight_input = input.config.get("weight_input", 0.7)
-    weight_output = input.config.get("weight_output", 0.3)
+    max_input = input.config.get("max_input_tokens", 150000)
+    max_output = input.config.get("max_output_tokens", 50000)
 
     scores: list[float] = []
     details_items: list[str] = []
@@ -45,12 +39,13 @@ def token_efficiency(input: EvalInput) -> EvalResult:
             continue
 
         has_data = True
-        weighted = (tokens["input_tokens"] * weight_input) + (tokens["output_tokens"] * weight_output)
-        score = max(0.0, min(1.0, 1.0 - (weighted / max_tokens)))
+        input_score = max(0.0, min(1.0, 1.0 - (tokens["input_tokens"] / max_input))) if max_input > 0 else 1.0
+        output_score = max(0.0, min(1.0, 1.0 - (tokens["output_tokens"] / max_output))) if max_output > 0 else 1.0
+        score = min(input_score, output_score)
         scores.append(score)
         details_items.append(
-            f"{inv.invocation_id}: {tokens['input_tokens']}in + {tokens['output_tokens']}out "
-            f"(weighted {weighted:.0f}/{max_tokens})"
+            f"{inv.invocation_id}: {tokens['input_tokens']}in/{max_input} + "
+            f"{tokens['output_tokens']}out/{max_output} -> {score:.2f}"
         )
 
     if not has_data:
