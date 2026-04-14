@@ -57,20 +57,10 @@ def tool_efficiency(input: EvalInput) -> EvalResult:
         total = len(tool_calls)
 
         if total == 0:
-            if min_tool_calls > 0:
-                scores.append(0.0)
-                inv_details.append({
-                    "invocation_id": inv.invocation_id,
-                    "score": 0.0,
-                    "reason": f"no tool calls (min required: {min_tool_calls})",
-                })
-            else:
-                scores.append(1.0)
-                inv_details.append({
-                    "invocation_id": inv.invocation_id,
-                    "score": 1.0,
-                    "reason": "no tool calls (tools optional)",
-                })
+            score = 0.0 if min_tool_calls > 0 else 1.0
+            reason = f"no tool calls (min required: {min_tool_calls})" if min_tool_calls > 0 else "no tool calls (tools optional)"
+            scores.append(score)
+            inv_details.append({"invocation_id": inv.invocation_id, "score": score, "reason": reason})
             continue
 
         dupes = 0

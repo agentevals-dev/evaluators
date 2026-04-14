@@ -37,12 +37,8 @@ def _extract_tokens(perf: dict) -> dict[str, int] | None:
                 "output_tokens": int(total_output) if total_output is not None else 0,
             }
 
-    input_t = perf.get("input_tokens")
-    if input_t is None:
-        input_t = perf.get("prompt_tokens")
-    output_t = perf.get("output_tokens")
-    if output_t is None:
-        output_t = perf.get("completion_tokens")
+    input_t = perf.get("input_tokens") if perf.get("input_tokens") is not None else perf.get("prompt_tokens")
+    output_t = perf.get("output_tokens") if perf.get("output_tokens") is not None else perf.get("completion_tokens")
 
     if input_t is not None or output_t is not None:
         return {
