@@ -33,8 +33,16 @@ Usage in eval_config.yaml:
 from __future__ import annotations
 
 from collections import Counter
+from typing import TypedDict
 
 from agentevals_evaluator_sdk import EvalInput, EvalResult, EvalStatus, evaluator
+
+
+class _Comparison(TypedDict):
+    invocation_id: str
+    required_skills: list[str]
+    called_tools: list[str]
+    score: float
 
 
 def _skills_score(required: list[str], called: list[str], match_type: str) -> float:
@@ -79,19 +87,20 @@ def skills_trajectory(input: EvalInput) -> EvalResult:
     skills = input.config.get("skills")
     n = len(input.invocations)
 
-    if skills is None or not isinstance(skills, list):
+    if not n:
         return EvalResult(
             score=0.0,
             status=EvalStatus.NOT_EVALUATED,
-            per_invocation_scores=[None] * n,
-            details={"reason": "missing or invalid config: skills (need a non-empty list of names)"},
+            per_invocation_scores=[],
+            details={"reason": "no invocations to evaluate"},
         )
-    if not skills:
+
+    if not isinstance(skills, list) or not skills:
         return EvalResult(
             score=0.0,
             status=EvalStatus.NOT_EVALUATED,
             per_invocation_scores=[None] * n,
-            details={"reason": "missing or empty config: skills"},
+            details={"reason": "missing or empty config: skills (need a non-empty list of names)"},
         )
 
     required = [str(s) for s in skills]
@@ -111,15 +120,10 @@ def skills_trajectory(input: EvalInput) -> EvalResult:
         )
 
     per_invocation_scores: list[float] = []
-    comparisons: list[dict] = []
+    comparisons: list[_Comparison] = []
 
     for inv in input.invocations:
-        called: list[str] = []
-        for call in inv.intermediate_steps.tool_calls or []:
-            if isinstance(call, dict):
-                name = call.get("name")
-                if name is not None:
-                    called.append(str(name))
+        called = [call.name for call in inv.intermediate_steps.tool_calls]
 
         score = _skills_score(required, called, raw_match_type)
         per_invocation_scores.append(score)
