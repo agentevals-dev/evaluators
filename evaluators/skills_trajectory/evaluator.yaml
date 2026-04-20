@@ -1,0 +1,6 @@
+name: skills_trajectory
+description: Scores whether configured skills/tool names were observed in each invocation, optionally requiring a specific order or exact match
+language: python
+entrypoint: skills_trajectory.py
+tags: [skills, trajectory, tools]
+author: frivas-at-navteca
